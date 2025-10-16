@@ -19,6 +19,9 @@ public class ChatSessionService {
     @Autowired
     private CacheService cacheService;
 
+    @Autowired
+    private UserSessionTrackingService userSessionTrackingService;
+
     /**
      * Create a new chat session
      */
@@ -28,7 +31,12 @@ public class ChatSessionService {
         String sessionId = generateSessionId();
         ChatSession session = new ChatSession(sessionId, userId, title);
 
-        return chatSessionRepository.save(session);
+        ChatSession savedSession = chatSessionRepository.save(session);
+
+        // Track the session for the user
+        userSessionTrackingService.trackUserSession(userId, sessionId);
+
+        return savedSession;
     }
 
     /**
@@ -41,7 +49,7 @@ public class ChatSessionService {
     /**
      * Get a session by ID with error handling
      */
-    public Optional<ChatSession> getSession(String sessionId) {
+    public Optional<ChatSession> getSessionOptional(String sessionId) {
         validateSessionId(sessionId);
 
         try {
@@ -55,8 +63,16 @@ public class ChatSessionService {
      * Get a session by ID, throwing exception if not found
      */
     public ChatSession getSessionOrThrow(String sessionId) {
-        return getSession(sessionId)
+        return getSessionOptional(sessionId)
                 .orElseThrow(() -> new IllegalArgumentException("Session not found: " + sessionId));
+    }
+
+    /**
+     * Get a session by ID directly (for compatibility)
+     */
+    public ChatSession getSession(String sessionId) {
+        validateSessionId(sessionId);
+        return getSessionOrThrow(sessionId);
     }
 
     /**
@@ -70,6 +86,9 @@ public class ChatSessionService {
         cacheService.trackSessionActivity(sessionId, session.getUserId());
         cacheService.setActiveSessionTTL(sessionId);
 
+        // Track activity in user session tracking
+        userSessionTrackingService.updateSessionActivity(sessionId);
+
         return chatSessionRepository.save(session);
     }
 
@@ -81,6 +100,15 @@ public class ChatSessionService {
 
         try {
             if (chatSessionRepository.existsById(sessionId)) {
+                // Get the session to find the user ID
+                Optional<ChatSession> sessionOpt = getSessionOptional(sessionId);
+                if (sessionOpt.isPresent()) {
+                    String userId = sessionOpt.get().getUserId();
+
+                    // Remove from user session tracking
+                    userSessionTrackingService.removeUserSession(userId, sessionId);
+                }
+
                 chatSessionRepository.deleteById(sessionId);
                 return true;
             }
