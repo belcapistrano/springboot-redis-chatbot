@@ -90,7 +90,7 @@ public class MockLLMService {
     // Configuration for error simulation
     private final double errorRate = 0.05; // 5% chance of errors
     private final double timeoutRate = 0.02; // 2% chance of timeout
-    private final double rateLimitRate = 0.03; // 3% chance of rate limit
+    private final double rateLimitRate = 0.0; // Disabled for demo
 
     /**
      * Generate a response to user input with context awareness and caching

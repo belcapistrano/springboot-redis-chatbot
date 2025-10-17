@@ -28,6 +28,12 @@ public class MessageService {
     @Autowired
     private ChatSessionService chatSessionService;
 
+    @Autowired(required = false)
+    private RedisStreamService streamService;
+
+    @Autowired(required = false)
+    private RedisPubSubService pubSubService;
+
     /**
      * Add a message to a session using Redis Lists for ordering
      */
@@ -56,6 +62,16 @@ public class MessageService {
         chatSessionService.incrementMessageCount(sessionId);
         if (tokenCount != null && tokenCount > 0) {
             chatSessionService.addTokensToSession(sessionId, tokenCount);
+        }
+
+        // Publish to streams and pub/sub if available
+        if (streamService != null) {
+            streamService.publishChatMessage(sessionId, savedMessage);
+        }
+        if (pubSubService != null) {
+            pubSubService.publishChatMessage(sessionId,
+                chatSessionService.getSessionOrThrow(sessionId).getUserId(),
+                messageId, content, role.name());
         }
 
         return savedMessage;
@@ -236,6 +252,49 @@ public class MessageService {
         }
 
         return 0;
+    }
+
+    /**
+     * Replace all messages in a session with compressed messages and summary
+     */
+    public void replaceSessionMessages(String sessionId, List<ChatMessage> compressedMessages, String conversationSummary) {
+        validateSessionId(sessionId);
+
+        // Delete existing messages
+        deleteSessionMessages(sessionId);
+
+        // Add conversation summary as first message if provided
+        if (conversationSummary != null && !conversationSummary.trim().isEmpty()) {
+            ChatMessage summaryMessage = new ChatMessage(
+                generateMessageId(),
+                sessionId,
+                MessageRole.ASSISTANT,
+                conversationSummary,
+                estimateTokenCount(conversationSummary)
+            );
+            summaryMessage.setTimestamp(LocalDateTime.now().minusMinutes(1)); // Place before other messages
+            chatMessageRepository.save(summaryMessage);
+
+            String listKey = getMessageListKey(sessionId);
+            redisTemplate.opsForList().rightPush(listKey, summaryMessage.getMessageId());
+        }
+
+        // Add compressed messages
+        String listKey = getMessageListKey(sessionId);
+        for (ChatMessage message : compressedMessages) {
+            // Create new message with new ID to avoid conflicts
+            ChatMessage newMessage = new ChatMessage(
+                generateMessageId(),
+                sessionId,
+                message.getRole(),
+                message.getContent(),
+                message.getTokenCount()
+            );
+            newMessage.setTimestamp(message.getTimestamp());
+
+            chatMessageRepository.save(newMessage);
+            redisTemplate.opsForList().rightPush(listKey, newMessage.getMessageId());
+        }
     }
 
     // Private helper methods

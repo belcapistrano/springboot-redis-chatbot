@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demo & Performance Testing Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .panel {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .full-width {
+            grid-column: 1 / -1;
+        }
+        h1, h2 {
+            color: #333;
+            margin-top: 0;
+        }
+        .btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        .btn:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+        .btn-danger {
+            background-color: #dc3545;
+        }
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+        .btn-success {
+            background-color: #28a745;
+        }
+        .btn-success:hover {
+            background-color: #218838;
+        }
+        .btn-warning {
+            background-color: #ffc107;
+            color: #212529;
+        }
+        .btn-warning:hover {
+            background-color: #e0a800;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .results-container {
+            max-height: 400px;
+            overflow-y: auto;
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            margin-top: 10px;
+        }
+        .metric {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            padding: 5px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .metric:last-child {
+            border-bottom: none;
+        }
+        .metric-value {
+            font-weight: bold;
+            color: #007bff;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+        .status-success {
+            background-color: #28a745;
+        }
+        .status-warning {
+            background-color: #ffc107;
+        }
+        .status-error {
+            background-color: #dc3545;
+        }
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #6c757d;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background-color: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        .progress-fill {
+            height: 100%;
+            background-color: #007bff;
+            transition: width 0.3s ease;
+        }
+        .chart-container {
+            height: 300px;
+            margin: 20px 0;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #6c757d;
+        }
+        .tab-container {
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 20px;
+        }
+        .tab {
+            display: inline-block;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+        }
+        .tab.active {
+            border-bottom-color: #007bff;
+            color: #007bff;
+            font-weight: bold;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .scenario-card {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .scenario-card:hover {
+            background-color: #f8f9fa;
+            border-color: #007bff;
+        }
+        .scenario-title {
+            font-weight: bold;
+            color: #333;
+        }
+        .scenario-description {
+            color: #6c757d;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+        code {
+            background-color: #f8f9fa;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+        .code-block {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <div class="panel full-width">
+            <h1>🧪 Demo & Performance Testing Dashboard</h1>
+            <p>Comprehensive testing and demonstration tools for the Spring Boot Redis Chatbot Cache</p>
+            <div style="margin-bottom: 15px;">
+                <button class="btn" onclick="window.location.href='/'">← Back to Main Chat</button>
+                <button class="btn btn-success" onclick="refreshDashboard()">🔄 Refresh Dashboard</button>
+            </div>
+        </div>
+
+        <!-- System Status Panel -->
+        <div class="panel">
+            <h2>📊 System Status</h2>
+            <div id="systemStatus">
+                <div class="loading">Loading system status...</div>
+            </div>
+        </div>
+
+        <!-- Quick Actions Panel -->
+        <div class="panel">
+            <h2>⚡ Quick Actions</h2>
+            <button class="btn" onclick="generateDemoData()">Generate Demo Data</button>
+            <button class="btn btn-warning" onclick="runQuickPerformanceTest()">Quick Performance Test</button>
+            <button class="btn btn-success" onclick="runCacheComparison()">Cache Comparison</button>
+            <button class="btn btn-danger" onclick="runStressTest()">Stress Test</button>
+        </div>
+
+        <!-- Demo Data Generator -->
+        <div class="panel">
+            <h2>🎭 Demo Data Generator</h2>
+            <div class="form-group">
+                <label>Number of Users:</label>
+                <input type="number" id="userCount" value="10" min="1" max="100">
+            </div>
+            <div class="form-group">
+                <label>Sessions per User:</label>
+                <input type="number" id="sessionsPerUser" value="2" min="1" max="10">
+            </div>
+            <div class="form-group">
+                <label>Messages per Session:</label>
+                <input type="number" id="messagesPerSession" value="10" min="1" max="50">
+            </div>
+            <button class="btn" onclick="generateCustomDemoData()">Generate Custom Data</button>
+            <div id="demoDataResults" class="results-container" style="display: none;"></div>
+        </div>
+
+        <!-- Performance Testing -->
+        <div class="panel">
+            <h2>🚀 Performance Testing</h2>
+            <div class="tab-container">
+                <span class="tab active" onclick="switchTab('cache-test')">Cache Test</span>
+                <span class="tab" onclick="switchTab('concurrent-test')">Concurrent Test</span>
+                <span class="tab" onclick="switchTab('latency-test')">Latency Test</span>
+                <span class="tab" onclick="switchTab('memory-test')">Memory Test</span>
+            </div>
+
+            <div id="cache-test" class="tab-content active">
+                <div class="form-group">
+                    <label>Iterations:</label>
+                    <input type="number" id="cacheIterations" value="100" min="10" max="1000">
+                </div>
+                <button class="btn" onclick="runCacheTest()">Run Cache Test</button>
+            </div>
+
+            <div id="concurrent-test" class="tab-content">
+                <div class="form-group">
+                    <label>Concurrent Users:</label>
+                    <input type="number" id="concurrentUsers" value="25" min="1" max="200">
+                </div>
+                <div class="form-group">
+                    <label>Messages per User:</label>
+                    <input type="number" id="messagesPerUser" value="10" min="1" max="50">
+                </div>
+                <button class="btn" onclick="runConcurrentTest()">Run Concurrent Test</button>
+            </div>
+
+            <div id="latency-test" class="tab-content">
+                <div class="form-group">
+                    <label>Iterations:</label>
+                    <input type="number" id="latencyIterations" value="50" min="10" max="500">
+                </div>
+                <button class="btn" onclick="runLatencyTest()">Run Latency Test</button>
+            </div>
+
+            <div id="memory-test" class="tab-content">
+                <div class="form-group">
+                    <label>Sessions:</label>
+                    <input type="number" id="memorySessions" value="50" min="10" max="500">
+                </div>
+                <div class="form-group">
+                    <label>Messages per Session:</label>
+                    <input type="number" id="memoryMessages" value="20" min="5" max="100">
+                </div>
+                <button class="btn" onclick="runMemoryTest()">Run Memory Test</button>
+            </div>
+
+            <div id="performanceResults" class="results-container" style="display: none;"></div>
+        </div>
+
+        <!-- Demo Scenarios -->
+        <div class="panel full-width">
+            <h2>🎬 Demo Scenarios</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px;">
+                <div class="scenario-card" onclick="runScenario('customer-support')">
+                    <div class="scenario-title">Customer Support</div>
+                    <div class="scenario-description">Simulates typical customer support conversations with realistic questions and responses</div>
+                </div>
+                <div class="scenario-card" onclick="runScenario('high-load')">
+                    <div class="scenario-title">High Load</div>
+                    <div class="scenario-description">Tests system performance under high concurrent user load</div>
+                </div>
+                <div class="scenario-card" onclick="runScenario('cache-showcase')">
+                    <div class="scenario-title">Cache Showcase</div>
+                    <div class="scenario-description">Demonstrates caching performance improvements with before/after comparison</div>
+                </div>
+                <div class="scenario-card" onclick="runScenario('multi-user')">
+                    <div class="scenario-title">Multi-User</div>
+                    <div class="scenario-description">Simulates multiple users having concurrent conversations</div>
+                </div>
+            </div>
+            <div id="scenarioResults" class="results-container" style="display: none;"></div>
+        </div>
+
+        <!-- Test Recommendations -->
+        <div class="panel">
+            <h2>💡 Test Recommendations</h2>
+            <div id="recommendations">
+                <div class="loading">Loading recommendations...</div>
+            </div>
+        </div>
+
+        <!-- Live Metrics -->
+        <div class="panel">
+            <h2>📈 Live Metrics</h2>
+            <div id="liveMetrics">
+                <div class="loading">Loading live metrics...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const baseUrl = '/api';
+        let currentTest = null;
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            refreshDashboard();
+            setInterval(updateLiveMetrics, 5000); // Update every 5 seconds
+        });
+
+        function refreshDashboard() {
+            loadSystemStatus();
+            loadRecommendations();
+            updateLiveMetrics();
+        }
+
+        async function loadSystemStatus() {
+            try {
+                const response = await fetch(`${baseUrl}/demo/dashboard-data`);
+                const data = await response.json();
+
+                const statusHtml = `
+                    <div class="metric">
+                        <span>System Health:</span>
+                        <span class="metric-value">
+                            <span class="status-indicator status-success"></span>
+                            ${data.health?.status || 'Unknown'}
+                        </span>
+                    </div>
+                    <div class="metric">
+                        <span>Total Memory:</span>
+                        <span class="metric-value">${data.systemMetrics?.totalMemory || 0} MB</span>
+                    </div>
+                    <div class="metric">
+                        <span>Used Memory:</span>
+                        <span class="metric-value">${data.systemMetrics?.usedMemory || 0} MB</span>
+                    </div>
+                    <div class="metric">
+                        <span>Available Processors:</span>
+                        <span class="metric-value">${data.systemMetrics?.processors || 0}</span>
+                    </div>
+                `;
+
+                document.getElementById('systemStatus').innerHTML = statusHtml;
+            } catch (error) {
+                document.getElementById('systemStatus').innerHTML = `
+                    <div class="metric">
+                        <span>Status:</span>
+                        <span class="metric-value">
+                            <span class="status-indicator status-error"></span>
+                            Error loading status
+                        </span>
+                    </div>
+                `;
+            }
+        }
+
+        async function loadRecommendations() {
+            try {
+                const response = await fetch(`${baseUrl}/demo/test-recommendations`);
+                const data = await response.json();
+
+                const recHtml = `
+                    <div class="metric">
+                        <span>Memory Recommendation:</span>
+                        <span class="metric-value">${data.memoryRecommendation}</span>
+                    </div>
+                    <div class="metric">
+                        <span>Max Recommended Users:</span>
+                        <span class="metric-value">${data.maxRecommendedUsers}</span>
+                    </div>
+                    <div class="metric">
+                        <span>Optimal Threads:</span>
+                        <span class="metric-value">${data.optimalThreads}</span>
+                    </div>
+                    <h4>Recommended Test Sequence:</h4>
+                    <ol>
+                        ${data.recommendedTestSequence.map(step => `<li>${step}</li>`).join('')}
+                    </ol>
+                `;
+
+                document.getElementById('recommendations').innerHTML = recHtml;
+            } catch (error) {
+                document.getElementById('recommendations').innerHTML = '<div class="loading">Error loading recommendations</div>';
+            }
+        }
+
+        async function updateLiveMetrics() {
+            try {
+                const response = await fetch(`${baseUrl}/demo/dashboard-data`);
+                const data = await response.json();
+
+                let metricsHtml = '<h4>Application Metrics:</h4>';
+
+                if (data.applicationMetrics) {
+                    metricsHtml += `
+                        <div class="metric">
+                            <span>Total Operations:</span>
+                            <span class="metric-value">${data.applicationMetrics.totalOperations || 0}</span>
+                        </div>
+                        <div class="metric">
+                            <span>Error Rate:</span>
+                            <span class="metric-value">${(data.applicationMetrics.errorRate || 0).toFixed(2)}%</span>
+                        </div>
+                    `;
+                }
+
+                if (data.cacheMetrics) {
+                    metricsHtml += '<h4>Cache Metrics:</h4>';
+                    metricsHtml += `
+                        <div class="metric">
+                            <span>Total Hits:</span>
+                            <span class="metric-value">${data.cacheMetrics.totalHits || 0}</span>
+                        </div>
+                        <div class="metric">
+                            <span>Total Misses:</span>
+                            <span class="metric-value">${data.cacheMetrics.totalMisses || 0}</span>
+                        </div>
+                    `;
+                }
+
+                document.getElementById('liveMetrics').innerHTML = metricsHtml;
+            } catch (error) {
+                // Silently fail for live metrics updates
+            }
+        }
+
+        function switchTab(tabName) {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+
+            // Remove active class from all tabs
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // Show selected tab content
+            document.getElementById(tabName).classList.add('active');
+
+            // Mark selected tab as active
+            event.target.classList.add('active');
+        }
+
+        async function generateDemoData() {
+            try {
+                showResults('demoDataResults', '<div class="loading">Generating demo data...</div>');
+
+                const response = await fetch(`${baseUrl}/demo/generate-data?userCount=5&sessionsPerUser=2&messagesPerSession=8`, {
+                    method: 'POST'
+                });
+                const result = await response.json();
+
+                const html = `
+                    <h4>Demo Data Generated Successfully!</h4>
+                    <div class="metric">
+                        <span>Users Created:</span>
+                        <span class="metric-value">${result.usersCreated}</span>
+                    </div>
+                    <div class="metric">
+                        <span>Sessions Created:</span>
+                        <span class="metric-value">${result.sessionsCreated}</span>
+                    </div>
+                    <div class="metric">
+                        <span>Messages Created:</span>
+                        <span class="metric-value">${result.messagesCreated}</span>
+                    </div>
+                `;
+
+                showResults('demoDataResults', html);
+            } catch (error) {
+                showResults('demoDataResults', `<div class="loading">Error: ${error.message}</div>`);
+            }
+        }
+
+        async function generateCustomDemoData() {
+            const userCount = document.getElementById('userCount').value;
+            const sessionsPerUser = document.getElementById('sessionsPerUser').value;
+            const messagesPerSession = document.getElementById('messagesPerSession').value;
+
+            try {
+                showResults('demoDataResults', '<div class="loading">Generating custom demo data...</div>');
+
+                const response = await fetch(`${baseUrl}/demo/generate-data?userCount=${userCount}&sessionsPerUser=${sessionsPerUser}&messagesPerSession=${messagesPerSession}`, {
+                    method: 'POST'
+                });
+                const result = await response.json();
+
+                const html = `
+                    <h4>Custom Demo Data Generated!</h4>
+                    <div class="metric">
+                        <span>Users Created:</span>
+                        <span class="metric-value">${result.usersCreated}</span>
+                    </div>
+                    <div class="metric">
+                        <span>Sessions Created:</span>
+                        <span class="metric-value">${result.sessionsCreated}</span>
+                    </div>
+                    <div class="metric">
+                        <span>Messages Created:</span>
+                        <span class="metric-value">${result.messagesCreated}</span>
+                    </div>
+                    <div class="metric">
+                        <span>Total Time:</span>
+                        <span class="metric-value">${((Date.now() - result.timestampMs) / 1000).toFixed(2)}s</span>
+                    </div>
+                `;
+
+                showResults('demoDataResults', html);
+            } catch (error) {
+                showResults('demoDataResults', `<div class="loading">Error: ${error.message}</div>`);
+            }
+        }
+
+        async function runQuickPerformanceTest() {
+            await runLoadTest('cache', {iterations: 50});
+        }
+
+        async function runCacheComparison() {
+            try {
+                showResults('performanceResults', '<div class="loading">Running cache comparison...</div>');
+
+                const response = await fetch(`${baseUrl}/demo/performance-comparison?iterations=100`);
+                const result = await response.json();
+
+                const html = `
+                    <h4>Cache Performance Comparison</h4>
+                    <div class="metric">
+                        <span>Performance Improvement:</span>
+                        <span class="metric-value">${result.performanceImprovement}</span>
+                    </div>
+                    <div class="metric">
+                        <span>Recommendation:</span>
+                        <span class="metric-value">${result.recommendation}</span>
+                    </div>
+                `;
+
+                showResults('performanceResults', html);
+            } catch (error) {
+                showResults('performanceResults', `<div class="loading">Error: ${error.message}</div>`);
+            }
+        }
+
+        async function runStressTest() {
+            try {
+                showResults('performanceResults', '<div class="loading">Running stress test... This may take a while.</div>');
+
+                const response = await fetch(`${baseUrl}/demo/stress-test?maxUsers=50&durationSeconds=30`, {
+                    method: 'POST'
+                });
+                const result = await response.json();
+
+                const html = `
+                    <h4>Stress Test Results</h4>
+                    <div class="metric">
+                        <span>Overall Score:</span>
+                        <span class="metric-value">${result.overallStressScore}</span>
+                    </div>
+                    <h5>Recommendations:</h5>
+                    <ul>
+                        ${result.recommendations.map(rec => `<li>${rec}</li>`).join('')}
+                    </ul>
+                `;
+
+                showResults('performanceResults', html);
+            } catch (error) {
+                showResults('performanceResults', `<div class="loading">Error: ${error.message}</div>`);
+            }
+        }
+
+        async function runCacheTest() {
+            const iterations = document.getElementById('cacheIterations').value;
+            await runLoadTest('cache', {iterations: parseInt(iterations)});
+        }
+
+        async function runConcurrentTest() {
+            const users = document.getElementById('concurrentUsers').value;
+            const messagesPerUser = document.getElementById('messagesPerUser').value;
+            await runLoadTest('concurrent', {
+                users: parseInt(users),
+                messagesPerUser: parseInt(messagesPerUser)
+            });
+        }
+
+        async function runLatencyTest() {
+            const iterations = document.getElementById('latencyIterations').value;
+            await runLoadTest('latency', {iterations: parseInt(iterations)});
+        }
+
+        async function runMemoryTest() {
+            const sessions = document.getElementById('memorySessions').value;
+            const messages = document.getElementById('memoryMessages').value;
+            await runLoadTest('memory', {
+                sessions: parseInt(sessions),
+                messagesPerSession: parseInt(messages)
+            });
+        }
+
+        async function runLoadTest(testType, parameters) {
+            try {
+                showResults('performanceResults', `<div class="loading">Running ${testType} test...</div>`);
+
+                const response = await fetch(`${baseUrl}/demo/load-test?testType=${testType}`);
+                const result = await response.json();
+
+                if (result.status === 'completed') {
+                    const html = formatTestResults(testType, result);
+                    showResults('performanceResults', html);
+                } else {
+                    showResults('performanceResults', `<div class="loading">Test failed: ${result.error}</div>`);
+                }
+            } catch (error) {
+                showResults('performanceResults', `<div class="loading">Error: ${error.message}</div>`);
+            }
+        }
+
+        async function runScenario(scenarioName) {
+            try {
+                showResults('scenarioResults', `<div class="loading">Running ${scenarioName} scenario...</div>`);
+
+                const response = await fetch(`${baseUrl}/demo/demo-scenario/${scenarioName}`, {
+                    method: 'POST'
+                });
+                const result = await response.json();
+
+                const html = `
+                    <h4>${scenarioName.charAt(0).toUpperCase() + scenarioName.slice(1)} Scenario Results</h4>
+                    <div class="metric">
+                        <span>Description:</span>
+                        <span class="metric-value">${result.description}</span>
+                    </div>
+                    <pre class="code-block">${JSON.stringify(result, null, 2)}</pre>
+                `;
+
+                showResults('scenarioResults', html);
+            } catch (error) {
+                showResults('scenarioResults', `<div class="loading">Error: ${error.message}</div>`);
+            }
+        }
+
+        function formatTestResults(testType, result) {
+            let html = `<h4>${testType.charAt(0).toUpperCase() + testType.slice(1)} Test Results</h4>`;
+
+            // Common metrics
+            if (result.status) {
+                html += `<div class="metric"><span>Status:</span><span class="metric-value">${result.status}</span></div>`;
+            }
+
+            // Type-specific formatting
+            switch (testType) {
+                case 'cache':
+                    html += `
+                        <div class="metric"><span>Iterations:</span><span class="metric-value">${result.iterations}</span></div>
+                        <div class="metric"><span>Cache Hit Rate:</span><span class="metric-value">${result.cacheHitRate?.toFixed(2)}%</span></div>
+                        <div class="metric"><span>Speed Improvement:</span><span class="metric-value">${result.speedImprovement}</span></div>
+                        <div class="metric"><span>Avg No-Cache Time:</span><span class="metric-value">${result.averageNoCacheTime?.toFixed(2)}ms</span></div>
+                        <div class="metric"><span>Avg Cache Time:</span><span class="metric-value">${result.averageCacheTime?.toFixed(2)}ms</span></div>
+                    `;
+                    break;
+                case 'concurrent':
+                    html += `
+                        <div class="metric"><span>Users:</span><span class="metric-value">${result.userCount}</span></div>
+                        <div class="metric"><span>Success Count:</span><span class="metric-value">${result.successCount}</span></div>
+                        <div class="metric"><span>Error Count:</span><span class="metric-value">${result.errorCount}</span></div>
+                        <div class="metric"><span>Avg Response Time:</span><span class="metric-value">${result.avgResponseTime?.toFixed(2)}ms</span></div>
+                        <div class="metric"><span>Throughput:</span><span class="metric-value">${result.throughput?.toFixed(2)} req/sec</span></div>
+                    `;
+                    break;
+                case 'latency':
+                    html += `
+                        <div class="metric"><span>Iterations:</span><span class="metric-value">${result.iterations}</span></div>
+                        <div class="metric"><span>Avg Latency:</span><span class="metric-value">${result.avgLatency?.toFixed(2)}ms</span></div>
+                        <div class="metric"><span>Min Latency:</span><span class="metric-value">${result.minLatency}ms</span></div>
+                        <div class="metric"><span>Max Latency:</span><span class="metric-value">${result.maxLatency}ms</span></div>
+                        <div class="metric"><span>P95 Latency:</span><span class="metric-value">${result.p95Latency?.toFixed(2)}ms</span></div>
+                    `;
+                    break;
+                case 'memory':
+                    html += `
+                        <div class="metric"><span>Sessions:</span><span class="metric-value">${result.sessionCount}</span></div>
+                        <div class="metric"><span>Memory Used:</span><span class="metric-value">${result.memoryUsed} MB</span></div>
+                        <div class="metric"><span>Avg per Session:</span><span class="metric-value">${result.avgMemoryPerSession} KB</span></div>
+                    `;
+                    break;
+            }
+
+            return html;
+        }
+
+        function showResults(containerId, html) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = html;
+            container.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
