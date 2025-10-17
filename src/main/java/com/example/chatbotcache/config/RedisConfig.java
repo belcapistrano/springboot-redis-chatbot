@@ -115,7 +115,17 @@ public class RedisConfig {
     public RedisMessageListenerContainer redisMessageListenerContainer(RedisConnectionFactory connectionFactory) {
         RedisMessageListenerContainer container = new RedisMessageListenerContainer();
         container.setConnectionFactory(connectionFactory);
-        container.setTaskExecutor(new org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor());
+
+        // Properly initialize ThreadPoolTaskExecutor
+        org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor taskExecutor =
+            new org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor();
+        taskExecutor.setCorePoolSize(4);
+        taskExecutor.setMaxPoolSize(8);
+        taskExecutor.setQueueCapacity(100);
+        taskExecutor.setThreadNamePrefix("redis-listener-");
+        taskExecutor.initialize();
+
+        container.setTaskExecutor(taskExecutor);
         return container;
     }
 }

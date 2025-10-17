@@ -8,12 +8,17 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.redis.core.RedisHash;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 import java.util.Objects;
 
+@Data
+@NoArgsConstructor
 @RedisHash("user_preferences")
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class UserPreferences {
@@ -44,6 +49,18 @@ public class UserPreferences {
     private Boolean enableCaching;
 
     private Boolean enableLogging;
+
+    // Additional fields for demo service
+    private String displayName;
+    private String language;
+    private String theme;
+    private String responseLength;
+    private String responseTone;
+    private Boolean enableNotifications;
+    private Boolean autoSaveHistory;
+    private Integer maxHistorySize;
+    private Integer contextWindowSize;
+    private Map<String, Object> customSettings;
 
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime createdAt;

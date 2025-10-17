@@ -1,0 +1,878 @@
+{
+  "info": {
+    "name": "Chatbot Context Cache API",
+    "description": "Comprehensive collection for testing the Spring Boot Redis Chatbot Cache API",
+    "version": "1.0.0",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "sessionId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "userId",
+      "value": "demo-user-postman",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "01. Session Management",
+      "item": [
+        {
+          "name": "Create Session",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has sessionId\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('sessionId');",
+                  "    pm.collectionVariables.set('sessionId', jsonData.sessionId);",
+                  "});",
+                  "",
+                  "pm.test(\"Session is active\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.status).to.eql('ACTIVE');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{userId}}\",\n  \"preferences\": {\n    \"language\": \"en\",\n    \"theme\": \"light\",\n    \"responseTone\": \"professional\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/sessions",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "sessions"]
+            }
+          }
+        },
+        {
+          "name": "Get Session",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Session details returned\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('sessionId');",
+                  "    pm.expect(jsonData).to.have.property('userId');",
+                  "    pm.expect(jsonData).to.have.property('status');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/sessions/{{sessionId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "sessions", "{{sessionId}}"]
+            }
+          }
+        },
+        {
+          "name": "Get User Sessions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/{{userId}}/sessions",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "{{userId}}", "sessions"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "02. Messages",
+      "item": [
+        {
+          "name": "Send Message",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains user and assistant messages\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('userMessage');",
+                  "    pm.expect(jsonData).to.have.property('assistantMessage');",
+                  "    pm.expect(jsonData).to.have.property('responseTime');",
+                  "});",
+                  "",
+                  "pm.test(\"Response time is reasonable\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.responseTime).to.be.below(5000);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"Hello! Can you explain what Redis is and how it improves application performance?\",\n  \"metadata\": {\n    \"source\": \"postman\",\n    \"timestamp\": \"{{$isoTimestamp}}\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/sessions/{{sessionId}}/chat",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "sessions", "{{sessionId}}", "chat"]
+            }
+          }
+        },
+        {
+          "name": "Send Follow-up Message",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"That's interesting! Can you tell me more about Redis data structures?\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/sessions/{{sessionId}}/chat",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "sessions", "{{sessionId}}", "chat"]
+            }
+          }
+        },
+        {
+          "name": "Get Messages",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Messages array exists\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('content');",
+                  "    pm.expect(jsonData.content).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/sessions/{{sessionId}}/messages?page=0&size=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "sessions", "{{sessionId}}", "messages"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "03. User Preferences",
+      "item": [
+        {
+          "name": "Get User Preferences",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/{{userId}}/preferences",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "{{userId}}", "preferences"]
+            }
+          }
+        },
+        {
+          "name": "Update User Preferences",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Preferences updated\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.theme).to.eql('dark');",
+                  "    pm.expect(jsonData.responseLength).to.eql('detailed');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"displayName\": \"Postman Test User\",\n  \"language\": \"en\",\n  \"theme\": \"dark\",\n  \"responseLength\": \"detailed\",\n  \"responseTone\": \"technical\",\n  \"enableNotifications\": true,\n  \"autoSaveHistory\": true,\n  \"maxHistorySize\": 100,\n  \"contextWindowSize\": 4000,\n  \"customSettings\": {\n    \"showTimestamps\": true,\n    \"soundEnabled\": false,\n    \"preferredTopics\": [\"technology\", \"programming\"]\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/users/{{userId}}/preferences",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "{{userId}}", "preferences"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "04. Context Management",
+      "item": [
+        {
+          "name": "Get Session Context",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Context information present\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('tokenCount');",
+                  "    pm.expect(jsonData).to.have.property('messageCount');",
+                  "    pm.expect(jsonData).to.have.property('contextWindow');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/sessions/{{sessionId}}/context",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "sessions", "{{sessionId}}", "context"]
+            }
+          }
+        },
+        {
+          "name": "Compress Context",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/sessions/{{sessionId}}/compress",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "sessions", "{{sessionId}}", "compress"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "05. Cache Management",
+      "item": [
+        {
+          "name": "Get Cache Statistics",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Cache stats present\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('hitRate');",
+                  "    pm.expect(jsonData).to.have.property('totalKeys');",
+                  "    pm.expect(jsonData).to.have.property('memoryUsage');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/cache/stats",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "cache", "stats"]
+            }
+          }
+        },
+        {
+          "name": "Clear Response Cache",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/cache/clear/responses",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "cache", "clear", "responses"]
+            }
+          }
+        },
+        {
+          "name": "Clear Session Cache",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/cache/clear/sessions",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "cache", "clear", "sessions"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "06. Monitoring",
+      "item": [
+        {
+          "name": "Get All Metrics",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Metrics sections present\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('application');",
+                  "    pm.expect(jsonData).to.have.property('cache');",
+                  "    pm.expect(jsonData).to.have.property('performance');",
+                  "    pm.expect(jsonData).to.have.property('system');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/monitoring/metrics",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "monitoring", "metrics"]
+            }
+          }
+        },
+        {
+          "name": "Get Application Metrics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/monitoring/metrics/application",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "monitoring", "metrics", "application"]
+            }
+          }
+        },
+        {
+          "name": "Get Cache Metrics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/monitoring/metrics/cache",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "monitoring", "metrics", "cache"]
+            }
+          }
+        },
+        {
+          "name": "Get Performance Metrics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/monitoring/metrics/performance",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "monitoring", "metrics", "performance"]
+            }
+          }
+        },
+        {
+          "name": "Get System Metrics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/monitoring/metrics/system",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "monitoring", "metrics", "system"]
+            }
+          }
+        },
+        {
+          "name": "Record Operation",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/monitoring/record/operation?operationType=postman-test",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "monitoring", "record", "operation"],
+              "query": [
+                {
+                  "key": "operationType",
+                  "value": "postman-test"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "07. Demo & Performance Testing",
+      "item": [
+        {
+          "name": "Generate Demo Data",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Demo data generated\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('usersCreated');",
+                  "    pm.expect(jsonData).to.have.property('sessionsCreated');",
+                  "    pm.expect(jsonData).to.have.property('messagesCreated');",
+                  "    pm.expect(jsonData.status).to.eql('success');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/demo/generate-data?userCount=5&sessionsPerUser=2&messagesPerSession=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "demo", "generate-data"],
+              "query": [
+                {
+                  "key": "userCount",
+                  "value": "5"
+                },
+                {
+                  "key": "sessionsPerUser",
+                  "value": "2"
+                },
+                {
+                  "key": "messagesPerSession",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Cache Performance Test",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Performance test completed\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.status).to.eql('completed');",
+                  "    pm.expect(jsonData).to.have.property('cacheHitRate');",
+                  "    pm.expect(jsonData).to.have.property('speedImprovement');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"iterations\": 50\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/demo/load-test?testType=cache",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "demo", "load-test"],
+              "query": [
+                {
+                  "key": "testType",
+                  "value": "cache"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Concurrent Users Test",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"users\": 10,\n  \"messagesPerUser\": 5\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/demo/load-test?testType=concurrent",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "demo", "load-test"],
+              "query": [
+                {
+                  "key": "testType",
+                  "value": "concurrent"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Latency Test",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"iterations\": 30\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/demo/load-test?testType=latency",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "demo", "load-test"],
+              "query": [
+                {
+                  "key": "testType",
+                  "value": "latency"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Performance Comparison",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/demo/performance-comparison?iterations=100",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "demo", "performance-comparison"],
+              "query": [
+                {
+                  "key": "iterations",
+                  "value": "100"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Dashboard Data",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/demo/dashboard-data",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "demo", "dashboard-data"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "08. Redis Advanced Features",
+      "item": [
+        {
+          "name": "Publish Event",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"channel\": \"chat.events\",\n  \"message\": {\n    \"type\": \"test_event\",\n    \"sessionId\": \"{{sessionId}}\",\n    \"userId\": \"{{userId}}\",\n    \"timestamp\": \"{{$isoTimestamp}}\",\n    \"source\": \"postman\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/redis/pubsub/publish",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "redis", "pubsub", "publish"]
+            }
+          }
+        },
+        {
+          "name": "Add to Stream",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"stream\": \"session:{{sessionId}}:activity\",\n  \"data\": {\n    \"event\": \"api_test\",\n    \"source\": \"postman\",\n    \"timestamp\": \"{{$isoTimestamp}}\",\n    \"details\": {\n      \"userId\": \"{{userId}}\",\n      \"action\": \"stream_test\"\n    }\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/redis/streams/add",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "redis", "streams", "add"]
+            }
+          }
+        },
+        {
+          "name": "Execute Lua Script",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"scriptName\": \"getSessionStats\",\n  \"keys\": [\"session:{{sessionId}}\", \"messages:{{sessionId}}\"],\n  \"args\": [\"{{userId}}\", \"{{$isoTimestamp}}\"]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/redis/scripts/execute",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "redis", "scripts", "execute"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "09. Health & Status",
+      "item": [
+        {
+          "name": "Actuator Health",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"System is healthy\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.status).to.be.oneOf(['UP', 'WARNING']);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/actuator/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["actuator", "health"]
+            }
+          }
+        },
+        {
+          "name": "Actuator Info",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/actuator/info",
+              "host": ["{{baseUrl}}"],
+              "path": ["actuator", "info"]
+            }
+          }
+        },
+        {
+          "name": "Actuator Metrics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/actuator/metrics",
+              "host": ["{{baseUrl}}"],
+              "path": ["actuator", "metrics"]
+            }
+          }
+        },
+        {
+          "name": "Prometheus Metrics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/actuator/prometheus",
+              "host": ["{{baseUrl}}"],
+              "path": ["actuator", "prometheus"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "10. Cleanup",
+      "item": [
+        {
+          "name": "Delete Session",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Session deleted\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('message');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/sessions/{{sessionId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "sessions", "{{sessionId}}"]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Global pre-request script",
+          "console.log('Making request to: ' + pm.request.url.toString());"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Global test script",
+          "pm.test('Response time is acceptable', function () {",
+          "    pm.expect(pm.response.responseTime).to.be.below(5000);",
+          "});",
+          "",
+          "if (pm.response.code >= 400) {",
+          "    console.log('Error response:', pm.response.text());",
+          "}"
+        ]
+      }
+    }
+  ]
+}
